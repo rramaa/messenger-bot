@@ -6,8 +6,12 @@ var _ = require('lodash'),
 
 router.get('/', function(req, res, next) {
     res.render('index', {
-        homeUrl:process.env.HOME_URL+":"+process.env.PORT
+        homeUrl: process.env.HOME_URL + ":" + process.env.PORT
     });
 });
+
+router.get('/webhook', controllers.messenger.get);
+
+router.post('/webhook', controllers.messenger.post);
 
 module.exports = router;
