@@ -19,6 +19,8 @@ var makeSureDirExists = function(path) {
 
 makeSureDirExists(path.join(__dirname, '../logs/info'));
 makeSureDirExists(path.join(__dirname, '../logs/error'));
+makeSureDirExists(path.join(__dirname, '../logs/stats'));
+makeSureDirExists(path.join(__dirname, '../logs/warn'));
 
 
 var infoLogger = new(winston.Logger)({

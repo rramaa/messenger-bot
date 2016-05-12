@@ -1,24 +1,31 @@
 "use strict";
-var spawn = require('child_process').spawn,
+let request = require('request'),
+    logger = require('../logger'),
     apiService = {};
 
-apiService.get = function(requestedUrl) {
+apiService.request = function(options, target) {
     return new Promise(function(resolve, reject) {
-        console.log("Fetching " + requestedUrl);
-        var tempData = "";
-        var curl = spawn('curl', [requestedUrl]);
-        curl.stdout.on('data', function(data) {
-            tempData += data;
-        });
-        curl.stdout.on('end', function(data) {
-            resolve(tempData);
-        })
-        curl.on('exit', function(code) {
-            if (code != 0) {
-                reject(code);
-            }
-        });
+        let requestObj = {};
+        if(options.form) requestObj.form = options.form;
+        if(options.auth) requestObj.auth = options.auth;
+        if(options.method) requestObj.method = (options.method == "post") ? "post" : "get";
+        if(options.url) requestObj.url = options.url;
+        logger.info(`Fetching ${requestObj.url}`)
+        if (target == undefined) {
+            request(requestObj, function(err, httpResponse, body) {
+                if (err == null) {
+                    resolve(body);
+                } else {
+                    reject(err);
+                }
+            });
+        }
     })
+}
+
+apiService.get = function(options, target){
+    options.method = "get";
+    return apiService.request(options, target);
 }
 
 module.exports = apiService;

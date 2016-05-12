@@ -1,4 +1,5 @@
 'use strict';
+let apiService = require('../models/apiService');
 let messenger = {}
 
 messenger.get = function(req, res, next){
