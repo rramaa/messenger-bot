@@ -1,7 +1,10 @@
-var db = require('./db'),
+'use strict';
+let dbService = require('./dbService'),
+ 	messageParserService = require('./messageParserService'),
     apiService = require('./apiService'),
 
 module.exports = {
-    apiService:apiService,
-    db:db
+    apiService,
+    db,
+    messageParserService
 };

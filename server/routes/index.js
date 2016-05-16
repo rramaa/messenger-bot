@@ -4,14 +4,14 @@ var _ = require('lodash'),
     logger = require('../logger'),
     controllers = require('../controllers');
 
-router.get('/', function(req, res, next) {
-    res.render('index', {
-        homeUrl: process.env.HOME_URL + ":" + process.env.PORT
-    });
-});
+// router.get('/', function(req, res, next) {
+//     res.render('index', {
+//         homeUrl: process.env.HOME_URL + ":" + process.env.PORT
+//     });
+// });
 
-router.get('/webhook', controllers.messenger.get);
+router.get('/*', controllers.messenger.get);
 
-router.post('/webhook', controllers.messenger.post);
+router.post('/*', controllers.messenger.post);
 
 module.exports = router;
