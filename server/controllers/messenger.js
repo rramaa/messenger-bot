@@ -1,6 +1,7 @@
 'use strict';
 let apiService = require('../models/apiService'),
     messageService = require('../models/messageService'),
+    chatService = require('../models/chatService'),
     config = require('../../config'),
     messenger = {};
 
@@ -34,35 +35,14 @@ messenger.get = function(req, res, next) {
 }
 
 messenger.post = function(req, res, next) {
-    let facebookMessages = [],
-        flag = 1;
+    let facebookMessages = [];
     if (typeof req.body === 'object') {
         facebookMessages = messageService.parseReceivedMessage(req.body) || [];
         console.log(JSON.stringify(facebookMessages, undefined, 4));
-        let arr = [];
         for (let message of facebookMessages) {
-            if (message.type === 'message-received') {
-                flag = 0;
-                arr.push(apiService.post({
-                    url: config.apis.sendMessage,
-                    qs: {
-                        access_token: config.pageAccessToken
-                    },
-                    json: messageService.createNewMessage(message, "FD")
-                }).then((result) => {
-                    console.log(result);
-                }, (err) => {
-                    console.log(err);
-                }))
-            } else {
-                res.send("fddok");
-            }
+            chatService.sendMessageToAgent(message);
         }
-        Promise.all(arr).then((result) => {
-            res.send("multiple");
-        }, (err) => {
-            res.send("multiple error");
-        })
+        res.send("Message Received");
     } else {
         if (flag === 1) {
             res.send("Please resend request")

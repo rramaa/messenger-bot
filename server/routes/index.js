@@ -10,7 +10,7 @@ var _ = require('lodash'),
 //     });
 // });
 
-router.get('/*', controllers.messenger.get);
+router.get('/', controllers.messenger.get);
 
 router.post('/*', controllers.messenger.post);
 

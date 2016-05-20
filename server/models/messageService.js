@@ -67,7 +67,7 @@ function _parseTypeOfMessage(message, obj) {
  * @param  {Object} ref: The parsed message which is being replied to
  * @param  {Object} params: Params as defined by the type of message
  * @return {Object} Object in a format which can be parsed by facebook
- */
+*/
 message.createNewMessage = function(ref, params, type) {
     switch (type) {
         case "generic":
@@ -94,7 +94,7 @@ message.createNewMessage = function(ref, params, type) {
  * @param  {Object} ref: The parsed message which is being replied to
  * @param  {Object} params: The TEXT which is to be sent.
  * @return {Object} Object in a format which can be parsed by facebook
- */
+*/
 function _textMessage(ref, params) {
     return {
         recipient: {
@@ -111,7 +111,7 @@ function _textMessage(ref, params) {
  * @param  {Object} params: The type of attachment and its URL/PAYLOAD as required
  * @return {Object} Object in a format which can be parsed by facebook
  * only image supported by facebook for now
- */
+*/
 function _attachment(ref, params) {
     let obj = {
         recipient: {
@@ -141,7 +141,7 @@ function _attachment(ref, params) {
  * @param  {Object} ref: The parsed message which is being replied to
  * @param  {Object} params: An array of buttons containing TITLE, TYPE and PAYLOAD/URL as required
  * @return {Object} Object in a format which can be parsed by facebook
- */
+*/
 function _buttonTemplate(ref, params) {
     let obj = {
         recipient: {
@@ -167,7 +167,7 @@ function _buttonTemplate(ref, params) {
  * @param  {Object} params: An array of bubbles containing TITLE, subtitle, item_url, image_url, and buttons
  * @return {Object} Object in a format which can be parsed by facebook
  * image dimensions: 1.91:1
- */
+*/
 function _genericTemplate(ref, params){
     let obj = {
         recipient: {
