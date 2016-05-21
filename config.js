@@ -26,6 +26,22 @@ config = {
     		}
     	},
     	subscribePage: "https://graph.facebook.com/v2.6/me/subscribed_apps"
+    },
+    rating: {
+        text: "Please rate your experience with M",
+        buttons: [{
+            title: "3 Star",
+            type: "postback",
+            payload: "3 star"
+        }, {
+            title: "2 Star",
+            type: "postback",
+            payload: "2 star"
+        }, {
+            title: "1 Star",
+            type: "postback",
+            payload: "1 star"
+        }]
     }
 };
 

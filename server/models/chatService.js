@@ -11,7 +11,7 @@ let connResetter = function() {
     let time = Date.now();
     timerFlag = true;
     for (let key in connections) {
-        if (time - connections[key].lastUpdated > 1000*60) {
+        if (time - connections[key].lastUpdated > 1000 * 60) {
             console.log(`${key} has left`);
             connections[key].socket.disconnect();
             delete connections[key];
@@ -28,11 +28,13 @@ function _setupSocketConnection() {
 }
 
 function _sendMessageToAgent(socket, messageData) {
-    socket.emit('new-message-for-agent', {
-        message: messageData.text,
-        deliveryId: messageData.senderId,
-        index: messageData.seq
-    });
+    if (messageData.text) {
+        socket.emit('new-message-for-agent', {
+            message: messageData.text,
+            deliveryId: messageData.senderId,
+            index: messageData.seq
+        });
+    }
     _updateLastActiveTime(messageData.senderId);
 }
 
@@ -41,7 +43,7 @@ function _joinUser(socket, senderId) {
         connections[senderId] = {
             socket: socket,
             lastUpdated: Date.now(),
-            confirmData: {}
+            messageConfirmation: {}
         };
         socket.emit("join-user", {
             deliveryId: senderId,
@@ -64,15 +66,42 @@ function _joinUser(socket, senderId) {
     })
 }
 
-function _updateLastActiveTime(senderId){
+function _postMessage(data, message) {
+    connections[data.deliveryId].messageConfirmation[Date.now()] = data;
+    apiService.post({
+        url: config.apis.sendMessage,
+        qs: {
+            access_token: config.pageAccessToken
+        },
+        json: message
+    }).then((result) => {
+        console.log("message sent", result);
+    }, (err) => {
+        console.log("message not sent", err);
+    })
+}
+
+function _updateLastActiveTime(senderId) {
     connections[senderId].lastUpdated = Date.now();
 }
 
 function _setupListeners(socket, senderId) {
     socket.on('new-message-for-user', (data) => {
         connections[senderId].confirmData = data;
-        chat.sendMessageToUser(data);
+        chat.sendMessageToUser(data, socket);
     });
+}
+
+function _acknowledgeMessage(socket, messageData, conn) {
+    if (conn.messageConfirmation) {
+        let sentDb = conn.messageConfirmation;
+        for (let key in sentDb) {
+            if (key < messageData.beforeTime) {
+                socket.emit('user-confirms-agent', sentDb[key]);
+                delete sentDb[key];
+            }
+        }
+    }
 }
 
 chat.sendMessageToAgent = function(messageData) {
@@ -88,7 +117,7 @@ chat.sendMessageToAgent = function(messageData) {
             //acknowledgement for message delivered to facebook user
             let socket = conn.socket;
             // _updateLastActiveTime(messageData.senderId);
-            socket.emit('user-confirms-agent', conn.confirmData);
+            _acknowledgeMessage(socket, messageData, conn);
         }
     } else {
         //new user --> setup new socket and listeners
@@ -107,18 +136,26 @@ chat.sendMessageToAgent = function(messageData) {
     }
 }
 
-chat.sendMessageToUser = function(data) {
-    apiService.post({
-        url: config.apis.sendMessage,
-        qs: {
-            access_token: config.pageAccessToken
-        },
-        json: messageService.createNewMessage({ senderId: data.deliveryId }, data.message)
-    }).then((result) => {
-        console.log("message sent");
-    }, (err) => {
-        console.log("message not sent", err);
-    })
+chat.sendMessageToUser = function(data, socket) {
+    let message = {};
+    if (data.appliedFilter) {
+        let filter = data.filtered;
+        if (filter === 'rating') {
+            console.log(`Sending rating request to user`);
+            message = messageService.createNewMessage({ senderId: data.deliveryId }, config.rating, "button")
+        } else if(filter === 'email' || filter === "phone"){
+            console.log(`Sending message to user: ${filter}`);
+            message = messageService.createNewMessage({senderId: data.deliveryId}, JSON.parse(data.chatObj)[filter]);
+        }
+    } else {
+        console.log(`Sending message to user: ${data.message}`);
+        if(data.message.length > 320){
+            _sendMessageToAgent(socket, {senderId:data.deliveryId, text: "Warning: Message length too long for facebook user", seq: "500"});
+            console.warn("message length too long");
+        }
+        message = messageService.createNewMessage({ senderId: data.deliveryId }, data.message);
+    }
+    _postMessage(data, message);
 }
 
 module.exports = chat;
