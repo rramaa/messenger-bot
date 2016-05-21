@@ -90,6 +90,11 @@ function _setupListeners(socket, senderId) {
         connections[senderId].confirmData = data;
         chat.sendMessageToUser(data, socket);
     });
+
+    socket.on('user-acquired', (data) => {
+        connections[senderId].agentAssigned = data.userDetails;
+        console.log(socket.json);
+    })
 }
 
 function _acknowledgeMessage(socket, messageData, conn) {
