@@ -105,7 +105,7 @@ function _setupListeners(socket, senderId) {
         console.info(`Socket connected for user ${senderIds}`);
     });
 
-    socket.on('connect', () => {
+    socket.on('connectError', () => {
         console.info(`Socket error for user ${senderIds}`);
         chat.sendMessageToUser({ deliveryId: senderId, message: "We are facing a temporary error. Please connect with us a little while later." });
     });
