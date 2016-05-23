@@ -166,7 +166,7 @@ chat.sendMessageToAgent = function(messageData) {
             let socket = _setupSocketConnection();
             _joinUser(socket, senderId).then((result) => {
                 _setupListeners(socket, messageData.senderId);
-                chat.sendMessageToUser({ deliveryId: senderId, message: "M will get in touch with you in a moment." });
+                chat.sendMessageToUser({ deliveryId: senderId, message: "m will get in touch with you in a moment." });
                 _sendMessageToAgent(socket, messageData);
             }, (err) => {
                 chat.sendMessageToUser({ deliveryId: senderId, message: "We are facing a temporary error. Please connect with us a little while later." });
