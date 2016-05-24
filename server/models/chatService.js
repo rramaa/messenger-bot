@@ -33,13 +33,26 @@ function _setupSocketConnection() {
 }
 
 function _sendMessageToAgent(socket, messageData) {
+    let text = "";
     if (messageData.text) {
-        socket.emit('new-message-for-agent', {
-            message: messageData.text,
-            deliveryId: messageData.senderId,
-            index: messageData.seq
-        });
+        text = messageData.text;
+    } else if (messageData.attachments && messageData.attachments instanceof Array) {
+        console.log(text);
+        let attachments = messageData.attachments;
+        text = `<div class="facebook-img-div">`;
+        for (let data of attachments) {
+            if (data.type === "image") {
+                text += `<img class="facebook-img" src="${data.payload && data.payload.url || ""}"/>`;
+            }
+        }
+        text += `</div>`;
     }
+    console.log(text);
+    socket.emit('new-message-for-agent', {
+        message: text,
+        deliveryId: messageData.senderId,
+        index: messageData.seq
+    });
     _updateLastActiveTime(messageData.senderId);
 }
 
