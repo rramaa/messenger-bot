@@ -41,13 +41,26 @@ function _sendMessageToAgent(socket, messageData) {
         let attachments = messageData.attachments;
         text = `<div class="facebook-attachment-div">`;
         for (let data of attachments) {
-            if (data.type === "image") {
-                text += `<img class="facebook-img" src="${data.payload && data.payload.url || ""}"/>`;
-            } else if(data.type === "file"){
-                let fileName = data.payload && data.payload.url || "";
-                fileName = fileName.split('?')[0];
-                fileName = fileName.substring(fileName.lastIndexOf("/")+1);
-                text += `<a class="facebook-file" target="_blank" href="${data.payload && data.payload.url || ""}">${fileName}</a>`;
+            switch(data.type){
+                case "image":
+                    text += `<img class="facebook-img" src="${data.payload && data.payload.url || ""}"/>`;
+                    break;
+                case "file":
+                    let fileName = data.payload && data.payload.url || "";
+                    fileName = fileName.split('?')[0];
+                    fileName = fileName.substring(fileName.lastIndexOf("/")+1);
+                    text += `<a class="facebook-file" target="_blank" href="${data.payload && data.payload.url || ""}">${fileName}</a>`;
+                    break;
+                case "location":
+                    let lat = data.payload && data.payload.coordinates && data.payload.coordinates.lat;
+                    let long = data.payload && data.payload.coordinates && data.payload.coordinates.long;
+                    text += `<a class="facebook-location" target="_blank" href=https://www.google.com/maps/@${lat},${long}>${data.title}</a>`;
+                    break;
+                case "audio":
+                    text += `<a class="facebook-audio" target="_blank" href="${data.payload && data.payload.url || ""}">User sent an audio</a>`;
+                    break;
+                default:
+                    text += "Message type not supported";
             }
         }
         text += `</div>`;
@@ -177,7 +190,7 @@ chat.sendMessageToAgent = function(messageData) {
         }
     } else {
         //new user --> setup new socket and listeners
-        logger.log(`${senderId} connecting for the first time`);
+        logger.info(`${senderId} connecting for the first time`);
         if (messageData.type == 'message-received') {
             //new message received for first time
             let socket = _setupSocketConnection();
@@ -264,7 +277,6 @@ chat.sendMessageToUser = function(data, socket) {
                 // message = messageService.createNewMessage({ senderId: data.deliveryId }, config.rating, "button")
                 return;
             default:
-                break;
         }
     } else {
         logger.info(`Sending message to user: ${data.message}`);
