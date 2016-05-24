@@ -1,5 +1,6 @@
 'use strict';
-let message = {};
+let message = {},
+    logger = require('../logger');
 
 message.parseReceivedMessage = function(obj) {
     let messages = [];
@@ -197,7 +198,6 @@ function _genericTemplate(ref, params){
             obj.message.attachment.payload.elements.push(bubbleObj);
         }
     };
-    console.log(JSON.stringify(obj, undefined, 4));
     return obj;
 }
 

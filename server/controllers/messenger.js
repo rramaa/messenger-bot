@@ -2,6 +2,7 @@
 let apiService = require('../models/apiService'),
     messageService = require('../models/messageService'),
     chatService = require('../models/chatService'),
+    logger = require('../logger'),
     config = require('../../config'),
     messenger = {};
 
@@ -38,7 +39,7 @@ messenger.post = function(req, res, next) {
     let facebookMessages = [];
     if (typeof req.body === 'object') {
         facebookMessages = messageService.parseReceivedMessage(req.body) || [];
-        console.log(JSON.stringify(facebookMessages, undefined, 4));
+        logger.info(JSON.stringify(facebookMessages, undefined, 4));
         for (let message of facebookMessages) {
             chatService.sendMessageToAgent(message);
         }

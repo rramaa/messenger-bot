@@ -4,6 +4,7 @@ let chat = {},
     config = require('../../config'),
     messageService = require('./messageService'),
     utilService = require('./utilService'),
+    logger = require('../logger'),
     connections = {},
     timerFlag = false, //set to true if timer is running
     io = require('socket.io-client');
@@ -13,7 +14,7 @@ let connResetter = function() {
     timerFlag = true;
     for (let key in connections) {
         if (time - connections[key].lastUpdated > 1000 * 60) {
-            console.log(`${key} has left`);
+            logger.info(`${key} has left`);
             _deleteConnection(key);
         }
     }
@@ -37,17 +38,20 @@ function _sendMessageToAgent(socket, messageData) {
     if (messageData.text) {
         text = messageData.text;
     } else if (messageData.attachments && messageData.attachments instanceof Array) {
-        console.log(text);
         let attachments = messageData.attachments;
-        text = `<div class="facebook-img-div">`;
+        text = `<div class="facebook-attachment-div">`;
         for (let data of attachments) {
             if (data.type === "image") {
                 text += `<img class="facebook-img" src="${data.payload && data.payload.url || ""}"/>`;
+            } else if(data.type === "file"){
+                let fileName = data.payload && data.payload.url || "";
+                fileName = fileName.split('?')[0];
+                fileName = fileName.substring(fileName.lastIndexOf("/")+1);
+                text += `<a class="facebook-file" target="_blank" href="${data.payload && data.payload.url || ""}">${fileName}</a>`;
             }
         }
         text += `</div>`;
     }
-    console.log(text);
     socket.emit('new-message-for-agent', {
         message: text,
         deliveryId: messageData.senderId,
@@ -92,10 +96,10 @@ function _postMessage(data, message, socket) {
         },
         json: message
     }).then((result) => {
-        console.log("message sent", result);
+        logger.info("message sent", result);
         socket.emit('user-confirms-agent', data);
     }, (err) => {
-        console.log("message not sent", err);
+        logger.warn("message not sent", err);
     })
 }
 
@@ -104,7 +108,7 @@ function _reAssignAgent(senderId) {
     let socket = _setupSocketConnection();
     _joinUser(socket, senderId).then((result) => {
         _setupListeners(socket, senderId);
-        console.log("Agent is reconnected");
+        logger.info("Agent is reconnected");
         // chat.sendMessageToUser({ deliveryId: senderId, message: "We are back online" });
     })
 }
@@ -115,11 +119,11 @@ function _updateLastActiveTime(senderId) {
 
 function _setupListeners(socket, senderId) {
     socket.on('connect', () => {
-        console.info(`Socket connected for user ${senderIds}`);
+        logger.info(`Socket connected for user ${senderIds}`);
     });
 
     socket.on('connectError', () => {
-        console.info(`Socket error for user ${senderIds}`);
+        logger.info(`Socket error for user ${senderIds}`);
         chat.sendMessageToUser({ deliveryId: senderId, message: "We are facing a temporary error. Please connect with us a little while later." });
     });
 
@@ -137,7 +141,7 @@ function _setupListeners(socket, senderId) {
 
     socket.on('agent-logs-out', (data) => {
         // chat.sendMessageToUser({ deliveryId: senderId, message: "We will be back soon." });
-        console.log("Agent logs out");
+        logger.warn("Agent logs out");
         _reAssignAgent(senderId);
     })
 
@@ -173,7 +177,7 @@ chat.sendMessageToAgent = function(messageData) {
         }
     } else {
         //new user --> setup new socket and listeners
-        console.log(`${senderId} connecting for the first time`);
+        logger.log(`${senderId} connecting for the first time`);
         if (messageData.type == 'message-received') {
             //new message received for first time
             let socket = _setupSocketConnection();
@@ -193,7 +197,7 @@ chat.sendMessageToUser = function(data, socket) {
     if (data.appliedFilter) {
         let filter = data.filtered;
         let chatObj = JSON.parse(data.chatObj);
-        console.log(`Sending message to user: ${filter}`);
+        logger.info(`Sending message to user: ${filter}`);
         switch (filter) {
             case 'email':
             case 'phone':
@@ -256,17 +260,17 @@ chat.sendMessageToUser = function(data, socket) {
                 }, 'generic');
                 break;
             case 'rating':
-                // console.log(`Sending rating request to user`);
+                // logger.info(`Sending rating request to user`);
                 // message = messageService.createNewMessage({ senderId: data.deliveryId }, config.rating, "button")
                 return;
             default:
                 break;
         }
     } else {
-        console.log(`Sending message to user: ${data.message}`);
+        logger.info(`Sending message to user: ${data.message}`);
         if (data.message.length > 320) {
             _sendMessageToAgent(socket, { senderId: data.deliveryId, text: "Warning: Message length too long for facebook user", seq: "500" });
-            console.warn("message length too long");
+            logger.warn("message length too long");
         }
         message = messageService.createNewMessage({ senderId: data.deliveryId }, data.message);
     }
