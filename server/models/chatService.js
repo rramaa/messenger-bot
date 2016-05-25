@@ -13,7 +13,7 @@ let connResetter = function() {
     let time = Date.now();
     timerFlag = true;
     for (let key in connections) {
-        if (time - connections[key].lastUpdated > 1000 * 60) {
+        if (time - connections[key].lastUpdated > 1000 * 60 * 2) {
             logger.info(`${key} has left`);
             _deleteConnection(key);
         }
